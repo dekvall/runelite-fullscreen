@@ -33,6 +33,7 @@ import net.runelite.client.config.RuneLiteConfig;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientUI;
+import net.runelite.client.ui.ContainableFrame;
 
 @Slf4j
 @PluginDescriptor(
@@ -69,9 +70,13 @@ public class FullscreenPlugin extends Plugin
 
 		//Dirty hack
 		Frame[] frames = Frame.getFrames();
-		if (frames.length > 1)
+		for (Frame frame : frames)
 		{
-			gd.setFullScreenWindow(frames[1]);
+			if (frame instanceof ContainableFrame)
+			{
+				gd.setFullScreenWindow(frame);
+				return;
+			}
 		}
 	}
 
