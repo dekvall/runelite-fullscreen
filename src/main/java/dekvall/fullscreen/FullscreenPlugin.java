@@ -27,6 +27,8 @@ package dekvall.fullscreen;
 import java.awt.Frame;
 import java.awt.GraphicsDevice;
 import javax.inject.Inject;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.config.RuneLiteConfig;
@@ -38,7 +40,8 @@ import net.runelite.client.ui.ContainableFrame;
 @Slf4j
 @PluginDescriptor(
 	name = "Fullscreen",
-	description = "Requires custom chrome being off."
+	description = "Requires custom chrome being off.",
+	enabledByDefault = false
 )
 public class FullscreenPlugin extends Plugin
 {
@@ -59,12 +62,20 @@ public class FullscreenPlugin extends Plugin
 		if (configManager.getConfig(RuneLiteConfig.class).enableCustomChrome())
 		{
 			log.info("You must disable custom chrome to enable fullscreen");
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(null,
+				"You must disable custom chrome to enable fullscreen",
+				"Could not enter fullscreen mode",
+				JOptionPane.ERROR_MESSAGE));
 			return;
 		}
 
 		if (!gd.isFullScreenSupported())
 		{
 			log.info("Fullscreen is not supported on your device, sorry :(");
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(null,
+				"Fullscreen is not supported on your device, sorry :(",
+				"Could not enter fullscreen mode",
+				JOptionPane.ERROR_MESSAGE));
 			return;
 		}
 
