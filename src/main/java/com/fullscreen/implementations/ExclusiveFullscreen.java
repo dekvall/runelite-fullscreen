@@ -22,62 +22,54 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package dekvall.fullscreen;
+package com.fullscreen.implementations;
 
 import java.awt.Frame;
 import java.awt.GraphicsDevice;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.config.RuneLiteConfig;
-import net.runelite.client.plugins.Plugin;
-import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientUI;
 import net.runelite.client.ui.ContainableFrame;
 
 @Slf4j
-@PluginDescriptor(
-	name = "Fullscreen",
-	description = "Requires custom chrome being off.",
-	enabledByDefault = false
-)
-public class FullscreenPlugin extends Plugin
+public class ExclusiveFullscreen implements Fullscreen
 {
-	@Inject
-	private ClientUI clientUI;
 
-	@Inject
-	private ConfigManager configManager;
+	private final ClientUI clientUI;
 
 	private GraphicsDevice gd;
 
-	@Override
-	protected void startUp() throws Exception
+	public ExclusiveFullscreen(ClientUI clientUI)
+	{
+		this.clientUI = clientUI;
+	}
+
+
+	public void enableFullscreen() throws RuntimeException
 	{
 		log.info("Fullscreen started!");
 		gd = clientUI.getGraphicsConfiguration().getDevice();
 		Frame tempParent = Frame.getFrames()[0];
 
-		if (configManager.getConfig(RuneLiteConfig.class).enableCustomChrome())
+		if (!gd.isFullScreenSupported())
 		{
-			log.info("You must disable custom chrome to enable fullscreen");
+			log.info("Exclusive Fullscreen Mode is not supported on your device, please try switching to borderless in settings.");
 			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(tempParent,
-				"You must disable custom chrome to enable fullscreen",
+				"Exclusive Fullscreen Mode is not supported on your device, please try switching to borderless in settings.",
 				"Could not enter fullscreen mode",
 				JOptionPane.ERROR_MESSAGE));
 			return;
 		}
 
-		if (!gd.isFullScreenSupported())
+		// throw exception with message on enable on mac
+		if (System.getProperty("os.name").toLowerCase().contains("mac"))
 		{
-			log.info("Fullscreen is not supported on your device, sorry :(");
-			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(tempParent,
-				"Fullscreen is not supported on your device, sorry :(",
-				"Could not enter fullscreen mode",
-				JOptionPane.ERROR_MESSAGE));
-			return;
+			throw new RuntimeException("Exclusive Fullscreen Mode is not supported on Mac OS, please try switching to borderless in settings.");
 		}
 
 		//Dirty hack
@@ -92,8 +84,7 @@ public class FullscreenPlugin extends Plugin
 		}
 	}
 
-	@Override
-	protected void shutDown() throws Exception
+	public void disableFullscreen()
 	{
 		gd.setFullScreenWindow(null);
 		log.info("Fullscreen stopped!");
